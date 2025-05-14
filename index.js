@@ -1,5 +1,5 @@
 
-// Backend do Zupi - Integrado ao WhatsApp
+// Backend do Zupi - Integrado ao WhatsApp e Firebase
 const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
@@ -10,11 +10,11 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(bodyParser.json());
 
-// Firebase Init
+// Firebase Init com URL correta
 const serviceAccount = require('./serviceAccountKey.json');
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: 'https://<YOUR_FIREBASE_PROJECT>.firebaseio.com'
+  databaseURL: 'https://zupi-app.firebaseio.com'
 });
 const db = admin.firestore();
 

@@ -1,7 +1,5 @@
 
-// Estrutura inicial do backend do Zupi (Node.js + Express)
-// Arquivo: index.js
-
+// Backend do Zupi - Integrado ao WhatsApp
 const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
@@ -20,7 +18,7 @@ admin.initializeApp({
 });
 const db = admin.firestore();
 
-// Webhook para receber mensagens do WhatsApp
+// Webhook do WhatsApp
 app.post('/webhook', async (req, res) => {
   const body = req.body;
   if (body.object) {
@@ -33,10 +31,10 @@ app.post('/webhook', async (req, res) => {
         const from = message.from;
         const text = message.text.body;
 
-        // Resposta simples de confirmação de pedido
+        // Resposta automática
         await sendWhatsAppMessage(from, `Recebido! Em breve seu pedido estará a caminho.`);
 
-        // Salvar pedido no Firestore
+        // Salvar no Firestore
         await db.collection('pedidos').add({
           telefone: from,
           mensagem: text,
@@ -51,10 +49,10 @@ app.post('/webhook', async (req, res) => {
   }
 });
 
-// Função para responder via WhatsApp Cloud API
+// Envio de mensagem com token e phone number ID corretos
 async function sendWhatsAppMessage(to, message) {
   await axios.post(
-    'https://graph.facebook.com/v19.0/<YOUR_PHONE_NUMBER_ID>/messages',
+    'https://graph.facebook.com/v19.0/105619019326589/messages',
     {
       messaging_product: 'whatsapp',
       to,
@@ -62,14 +60,14 @@ async function sendWhatsAppMessage(to, message) {
     },
     {
       headers: {
-        'Authorization': `Bearer <YOUR_WHATSAPP_TOKEN>`,
+        Authorization: 'Bearer 551489941343709|QHDu04u6Fcjml25HebZonStvu6w',
         'Content-Type': 'application/json'
       }
     }
   );
 }
 
-// Inicializar servidor
+// Inicia o servidor
 app.listen(PORT, () => {
   console.log(`Zupi backend rodando na porta ${PORT}`);
 });

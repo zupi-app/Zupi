@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const admin = require('firebase-admin');
+const app = express();         // <<< ADICIONADO AQUI
 const PORT = 3000;
 
 // Middleware
@@ -82,6 +83,11 @@ async function sendWhatsAppMessage(to, message) {
     }
   );
 }
+
+// Inicia o servidor
+app.listen(PORT, () => {
+  console.log(`Zupi backend rodando na porta ${PORT}`);
+});
 
 // Inicia o servidor
 app.listen(PORT, () => {

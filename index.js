@@ -1,4 +1,3 @@
-
 // Backend do Zupi - Integrado ao WhatsApp e Firebase
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -18,7 +17,25 @@ admin.initializeApp({
 });
 const db = admin.firestore();
 
-// Webhook do WhatsApp
+// Endpoint GET para validação do webhook
+app.get('/webhook', (req, res) => {
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
+
+  if (mode && token) {
+    if (mode === 'subscribe' && token === 'zupi_token') {
+      console.log('Webhook verificado!');
+      res.status(200).send(challenge);
+    } else {
+      res.sendStatus(403);
+    }
+  } else {
+    res.sendStatus(400);
+  }
+});
+
+// Webhook do WhatsApp - POST para receber mensagens
 app.post('/webhook', async (req, res) => {
   const body = req.body;
   if (body.object) {

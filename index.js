@@ -1,15 +1,12 @@
-// Backend do Zupi - Integrado ao WhatsApp e Firebase
 const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const admin = require('firebase-admin');
-const app = express();         // <<< ADICIONADO AQUI
+const app = express();
 const PORT = 3000;
 
-// Middleware
 app.use(bodyParser.json());
 
-// Firebase Init com URL correta
 const serviceAccount = require('./serviceAccountKey.json');
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -17,7 +14,6 @@ admin.initializeApp({
 });
 const db = admin.firestore();
 
-// Endpoint GET para validação do webhook
 app.get('/webhook', (req, res) => {
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
@@ -35,7 +31,6 @@ app.get('/webhook', (req, res) => {
   }
 });
 
-// Webhook do WhatsApp - POST para receber mensagens
 app.post('/webhook', async (req, res) => {
   const body = req.body;
   if (body.object) {
@@ -48,10 +43,8 @@ app.post('/webhook', async (req, res) => {
         const from = message.from;
         const text = message.text.body;
 
-        // Resposta automática
         await sendWhatsAppMessage(from, `Recebido! Em breve seu pedido estará a caminho.`);
 
-        // Salvar no Firestore
         await db.collection('pedidos').add({
           telefone: from,
           mensagem: text,
@@ -66,7 +59,6 @@ app.post('/webhook', async (req, res) => {
   }
 });
 
-// Envio de mensagem com novo número do WhatsApp
 async function sendWhatsAppMessage(to, message) {
   await axios.post(
     'https://graph.facebook.com/v19.0/653861894475229/messages',
@@ -84,12 +76,6 @@ async function sendWhatsAppMessage(to, message) {
   );
 }
 
-// Inicia o servidor
-app.listen(PORT, () => {
-  console.log(`Zupi backend rodando na porta ${PORT}`);
-});
-
-// Inicia o servidor
 app.listen(PORT, () => {
   console.log(`Zupi backend rodando na porta ${PORT}`);
 });

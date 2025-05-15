@@ -3,13 +3,14 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const admin = require('firebase-admin');
+
 const app = express();
-const PORT = process.env.PORT || 3000; // Usa a porta do Render ou 3000
+const PORT = process.env.PORT || 10000;
 
 // Middleware
 app.use(bodyParser.json());
 
-// Firebase Init
+// Firebase Init com URL correta
 const serviceAccount = require('./serviceAccountKey.json');
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -17,7 +18,7 @@ admin.initializeApp({
 });
 const db = admin.firestore();
 
-// Validação do Webhook (GET)
+// Endpoint GET para validação do webhook
 app.get('/webhook', (req, res) => {
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
@@ -25,10 +26,9 @@ app.get('/webhook', (req, res) => {
 
   if (mode && token) {
     if (mode === 'subscribe' && token === 'zupi_token') {
-      console.log('✅ Webhook verificado com sucesso!');
+      console.log('Webhook verificado!');
       res.status(200).send(challenge);
     } else {
-      console.log('❌ Token de verificação inválido.');
       res.sendStatus(403);
     }
   } else {
@@ -36,53 +36,41 @@ app.get('/webhook', (req, res) => {
   }
 });
 
-// Recebe mensagens (POST)
+// Webhook do WhatsApp - POST para receber mensagens
 app.post('/webhook', async (req, res) => {
-  console.log('📩 Recebido POST no /webhook');
   const body = req.body;
 
   if (body.object) {
-    try {
-      body.entry.forEach(async (entry) => {
-        const changes = entry.changes[0];
-        const value = changes.value;
-        const message = value.messages && value.messages[0];
+    body.entry.forEach(async (entry) => {
+      const changes = entry.changes[0];
+      const value = changes.value;
+      const message = value.messages && value.messages[0];
 
-        if (message) {
-          const from = message.from;
-          const text = message.text.body;
+      if (message) {
+        const from = message.from;
+        const text = message.text.body;
 
-          console.log(`📬 Mensagem recebida de ${from}: "${text}"`);
+        console.log(`📬 Mensagem recebida de ${from}: ${text}`);
 
-          // Enviar resposta automática
-          await sendWhatsAppMessage(from, `Recebido! Em breve seu pedido estará a caminho.`);
+        // Resposta automática
+        await sendWhatsAppMessage(from, `Recebido! Em breve seu pedido estará a caminho.`);
 
-          // Salvar no Firestore
-          const doc = await db.collection('pedidos').add({
-            telefone: from,
-            mensagem: text,
-            status: 'Recebido',
-            criadoEm: new Date()
-          });
-
-          console.log(`✅ Pedido salvo no Firebase com ID: ${doc.id}`);
-        } else {
-          console.log('⚠️ Nenhuma mensagem encontrada no payload.');
-        }
-      });
-
-      res.sendStatus(200);
-    } catch (error) {
-      console.error('❌ Erro ao processar mensagem:', error);
-      res.sendStatus(500);
-    }
+        // Salvar no Firestore
+        await db.collection('pedidos').add({
+          telefone: from,
+          mensagem: text,
+          status: 'Recebido',
+          criadoEm: new Date()
+        });
+      }
+    });
+    res.sendStatus(200);
   } else {
-    console.log('⚠️ POST inválido. body.object ausente.');
     res.sendStatus(404);
   }
 });
 
-// Envia mensagem via WhatsApp
+// Envio de mensagem com novo número do WhatsApp
 async function sendWhatsAppMessage(to, message) {
   try {
     await axios.post(
@@ -100,8 +88,8 @@ async function sendWhatsAppMessage(to, message) {
       }
     );
     console.log(`✅ Mensagem enviada para ${to}`);
-  } catch (err) {
-    console.error(`❌ Erro ao enviar mensagem para ${to}:`, err.message);
+  } catch (error) {
+    console.error('Erro ao enviar mensagem:', error.response?.data || error.message);
   }
 }
 

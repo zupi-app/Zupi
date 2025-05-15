@@ -1,10 +1,10 @@
-// Backend do Zupi com debug para WhatsApp e Firebase
+// Backend do Zupi - Integrado ao WhatsApp e Firebase
 const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const admin = require('firebase-admin');
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000; // Usa a porta do Render ou 3000
 
 // Middleware
 app.use(bodyParser.json());

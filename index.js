@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const axios = require('axios');
 const admin = require('firebase-admin');
 const app = express();
-const PORT = process.env.PORT || 3000;
+Zupi backend rodando na porta 3000
 
 // Middleware
 app.use(bodyParser.json());

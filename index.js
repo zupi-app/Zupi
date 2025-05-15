@@ -49,10 +49,10 @@ app.post('/webhook', async (req, res) => {
   }
 });
 
-// Envio de mensagem com token e phone number ID corretos
+// Envio de mensagem com novo número do WhatsApp
 async function sendWhatsAppMessage(to, message) {
   await axios.post(
-    'https://graph.facebook.com/v19.0/105619019326589/messages',
+    'https://graph.facebook.com/v19.0/653861894475229/messages',
     {
       messaging_product: 'whatsapp',
       to,

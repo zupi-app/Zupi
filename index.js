@@ -7,6 +7,7 @@ const PORT = 3000;
 
 app.use(bodyParser.json());
 
+// Firebase Init
 const serviceAccount = require('./serviceAccountKey.json');
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -14,6 +15,12 @@ admin.initializeApp({
 });
 const db = admin.firestore();
 
+// Rota de teste para UptimeRobot
+app.get('/', (req, res) => {
+  res.status(200).send('Zupi backend está online!');
+});
+
+// Webhook de verificação
 app.get('/webhook', (req, res) => {
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
@@ -31,6 +38,7 @@ app.get('/webhook', (req, res) => {
   }
 });
 
+// Webhook de mensagens
 app.post('/webhook', async (req, res) => {
   const body = req.body;
   if (body.object) {
@@ -59,6 +67,7 @@ app.post('/webhook', async (req, res) => {
   }
 });
 
+// Enviar mensagem pelo WhatsApp API
 async function sendWhatsAppMessage(to, message) {
   await axios.post(
     'https://graph.facebook.com/v19.0/653861894475229/messages',

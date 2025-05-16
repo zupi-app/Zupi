@@ -76,7 +76,7 @@ app.post('/webhook', async (req, res) => {
 // Envia mensagem de texto no WhatsApp
 async function sendWhatsAppMessage(to, message) {
   await axios.post(
-    'https://graph.facebook.com/v17.0/<YOUR_PHONE_NUMBER_ID>/messages', // Substitua pelo seu ID
+    'https://graph.facebook.com/v17.0/653861894475229/messages',
     {
       messaging_product: 'whatsapp',
       to,
@@ -84,7 +84,7 @@ async function sendWhatsAppMessage(to, message) {
     },
     {
       headers: {
-        Authorization: 'Bearer <YOUR_ACCESS_TOKEN>', // Substitua pelo token de acesso
+        Authorization: 'Bearer EAAH1k8INDd0BO8nUi1ntlx5396PBC7KyofmjFDqBWSMddskDEVf4CzWOUItWGR2jJT2OuOdlIQu7OsITbSyw3ki5MNkGauHsjm5aKZCuZBfT5U782VrkN9XioeV9bxtLO3fpY6HyFK9Q0FZCGqAjXhoXXZAjaHwkuW3EeaicVLj1uuosY8pgfnVjENl0CC9gqXKTAkFHnIXXnAI8FY6H0TmWrcoZD',
         'Content-Type': 'application/json'
       }
     }
@@ -95,4 +95,3 @@ async function sendWhatsAppMessage(to, message) {
 app.listen(PORT, () => {
   console.log(`🚀 Zupi backend rodando na porta ${PORT}`);
 });
-

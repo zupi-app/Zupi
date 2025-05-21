@@ -4,13 +4,14 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const admin = require('firebase-admin');
+
 const app = express();
-const PORT = process.env.PORT || 10000; // Usar porta 10000 para Render
+const PORT = process.env.PORT || 10000; // Porta recomendada para Render
 
 // Middleware
 app.use(bodyParser.json());
 
-// Firebase - inicializa com chave do serviceAccountKey.json
+// Inicializa Firebase com o arquivo serviceAccountKey.json
 const serviceAccount = require('./serviceAccountKey.json');
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -18,26 +19,26 @@ admin.initializeApp({
 });
 const db = admin.firestore();
 
-// Webhook - validação GET para o Facebook/Meta
+// Endpoint para verificação do webhook (GET)
 app.get('/webhook', (req, res) => {
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
 
   if (mode === 'subscribe' && token === 'zupi_token') {
-    console.log('Webhook verificado!');
+    console.log('✅ Webhook verificado com sucesso!');
     res.status(200).send(challenge);
   } else {
     res.sendStatus(403);
   }
 });
 
-// Webhook - recebimento de mensagens POST
+// Endpoint para receber mensagens (POST)
 app.post('/webhook', async (req, res) => {
   const body = req.body;
 
   if (body.object) {
-    for (const entry of body.entry) {
+    for (const entry of body.entry || []) {
       const changes = entry.changes[0];
       const value = changes.value;
       const message = value.messages && value.messages[0];
@@ -45,16 +46,17 @@ app.post('/webhook', async (req, res) => {
       if (message) {
         const from = message.from;
         const text = message.text?.body;
+
         console.log(`📬 Mensagem recebida de ${from}: ${text}`);
 
-        // Enviar resposta automática
+        // Tenta responder no WhatsApp
         try {
           await sendWhatsAppMessage(from, 'Recebido! Em breve seu pedido estará a caminho.');
         } catch (err) {
-          console.error('Erro ao enviar mensagem:', err.response?.data || err);
+          console.error('❌ Erro ao enviar mensagem:', err.response?.data || err.message);
         }
 
-        // Salvar no Firestore
+        // Tenta salvar no Firestore
         try {
           await db.collection('pedidos').add({
             telefone: from,
@@ -62,21 +64,23 @@ app.post('/webhook', async (req, res) => {
             status: 'Recebido',
             criadoEm: new Date()
           });
+          console.log('📦 Pedido salvo no Firestore');
         } catch (err) {
-          console.error('Erro ao salvar no Firestore:', err);
+          console.error('❌ Erro ao salvar no Firestore:', err.message);
         }
       }
     }
+
     res.sendStatus(200);
   } else {
     res.sendStatus(404);
   }
 });
 
-// Envia mensagem de texto no WhatsApp
+// Envia mensagem de texto pelo WhatsApp Cloud API
 async function sendWhatsAppMessage(to, message) {
   await axios.post(
-    'https://graph.facebook.com/v17.0/653861894475229/messages',
+    'https://graph.facebook.com/v17.0/653861894475229/messages', // Substitua se o ID mudar
     {
       messaging_product: 'whatsapp',
       to,
@@ -91,7 +95,8 @@ async function sendWhatsAppMessage(to, message) {
   );
 }
 
-// Inicia servidor
+// Inicia o servidor
 app.listen(PORT, () => {
   console.log(`🚀 Zupi backend rodando na porta ${PORT}`);
 });
+
